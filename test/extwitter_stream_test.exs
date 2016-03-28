@@ -79,6 +79,32 @@ defmodule ExTwitterStreamTest do
     end
   end
 
+  test_with_mock "gets twitter user stream", :oauth,
+    [post: fn(_url, _params, _consumer, _access_token, _access_token_secret, _options) ->
+      request_id = make_ref
+      TestHelper.TestStore.set({self, request_id})
+      {:ok, request_id}
+    end] do
+
+    # Process stream on different process.
+    parent = self
+    spawn(fn() ->
+      stream = ExTwitter.stream_user
+      tweet = Enum.take(stream, 1) |> List.first
+      send parent, {:ok, tweet}
+    end)
+
+    # Send mock data after short wait.
+    wait_async_request_initialization
+    send_mock_data(TestHelper.TestStore.get, @mock_tweet_json)
+
+    # Verify result.
+    receive do
+      {:ok, tweet} ->
+        assert tweet.text =~ ~r/sample tweet text/
+    end
+  end
+
   test_with_mock "gets twitter stream messages", :oauth,
       [post: fn(_url, _params, _consumer, _access_token, _access_token_secret, _options) ->
       request_id = make_ref

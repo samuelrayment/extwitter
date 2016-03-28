@@ -18,17 +18,24 @@ defmodule ExTwitter.API.Streaming do
   def stream_sample(options \\ []) do
     {options, configs} = seperate_configs_from_options(options)
     params = ExTwitter.Parser.parse_request_params(options)
-    req = %AsyncRequest{processor: nil, method: :get, path: "1.1/statuses/sample.json", params: params, configs: configs}
+    req = %AsyncRequest{processor: nil, method: :get, path: request_url("1.1/statuses/sample.json"), params: params, configs: configs}
     create_stream(req, @default_stream_timeout)
   end
 
   def stream_filter(options, timeout \\ @default_stream_timeout) do
     {options, configs} = seperate_configs_from_options(options)
     params = ExTwitter.Parser.parse_request_params(options)
-    req = %AsyncRequest{processor: nil, method: :post, path: "1.1/statuses/filter.json", params: params, configs: configs}
+    req = %AsyncRequest{processor: nil, method: :post, path: request_url("1.1/statuses/filter.json"), params: params, configs: configs}
     create_stream(req, timeout)
   end
 
+  def stream_user(options \\ [], timeout \\ @default_stream_timeout) do
+    {options, configs} = seperate_configs_from_options(options)
+    params = ExTwitter.Parser.parse_request_params(options)
+    req = %AsyncRequest{processor: nil, method: :post, path: user_request_url("1.1/user.json"), params: params, configs: configs}
+    create_stream(req, timeout)
+  end
+  
   defp seperate_configs_from_options(options) do
     config  = Keyword.take(options, [:receive_messages])
     options = Keyword.delete(options, :receive_messages)
@@ -57,7 +64,7 @@ defmodule ExTwitter.API.Streaming do
 
     spawn(fn ->
       response = ExTwitter.OAuth.request_async(
-        req.method, request_url(req.path), req.params, consumer, oauth[:access_token], oauth[:access_token_secret])
+        req.method, req.path, req.params, consumer, oauth[:access_token], oauth[:access_token_secret])
 
       case response do
         {:ok, request_id} ->
@@ -200,5 +207,9 @@ defmodule ExTwitter.API.Streaming do
 
   defp request_url(path) do
     "https://stream.twitter.com/#{path}" |> to_char_list
+  end
+
+  def user_request_url(path) do
+    "https://userstream.twitter.com/#{path}" |> to_char_list
   end
 end

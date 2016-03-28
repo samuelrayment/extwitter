@@ -500,6 +500,15 @@ defmodule ExTwitter do
   @spec stream_filter(Keyword.t, [timeout: Integer]) :: Enumerable.t
   defdelegate stream_filter(options, timeout), to: ExTwitter.API.Streaming
 
+  @spec stream_user :: Enumerable.t
+  defdelegate stream_user, to: ExTwitter.API.Streaming
+  
+  @spec stream_user(Keyword.t) :: Enumerable.t
+  defdelegate stream_user(options), to: ExTwitter.API.Streaming
+  
+  @spec stream_user(Keyword.t, [timeout: Integer]) :: Enumerate.t
+  defdelegate stream_user(options, timeout), to: ExTwitter.API.Streaming
+  
   @doc """
   An interface to control the stream.
 
